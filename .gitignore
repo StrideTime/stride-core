@@ -1,0 +1,38 @@
+# Dependencies
+node_modules
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Build output
+dist
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+.npmrc
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage
+*.log
+
+# Misc
+.changeset/*.md
+!.changeset/README.md

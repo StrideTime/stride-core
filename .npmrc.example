@@ -1,0 +1,14 @@
+# Example .npmrc configuration for @stridetime packages
+# Copy this file to .npmrc and replace ${GITHUB_TOKEN} with your actual token
+
+@stridetime:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+
+# To create a GitHub Personal Access Token:
+# 1. Go to GitHub Settings > Developer settings > Personal access tokens > Tokens (classic)
+# 2. Click "Generate new token (classic)"
+# 3. Give it a name like "stride-packages"
+# 4. Select the "read:packages" scope (and "write:packages" if you need to publish)
+# 5. Click "Generate token" and copy the token
+# 6. Replace ${GITHUB_TOKEN} above with your actual token
+# 7. Save this file as .npmrc (without the .example extension)
