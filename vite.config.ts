@@ -16,10 +16,11 @@ export default defineConfig({
       formats: ['es', 'umd'],
     },
     rollupOptions: {
-      external: ['@stridetime/db'],
+      external: ['@stridetime/db', '@stridetime/types'],
       output: {
         globals: {
           '@stridetime/db': 'StrideDb',
+          '@stridetime/types': 'StrideTypes',
         },
       },
     },
