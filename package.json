@@ -21,6 +21,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:unit": "vitest run src/tests/services/",
+    "test:coverage": "vitest run --coverage",
+    "test:ci": "vitest run --coverage --reporter=verbose",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "yarn build && changeset publish"

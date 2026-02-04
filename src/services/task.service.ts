@@ -1,16 +1,16 @@
-/**
- * Task Service
- * Business logic for task management using repository pattern
- */
-
-import type { StrideDatabase } from '@stridetime/db';
-import { taskRepo, projectRepo } from '@stridetime/db';
+import {
+  taskRepo as defaultTaskRepo,
+  projectRepo as defaultProjectRepo,
+  type StrideDatabase,
+  type TaskRepository,
+  type ProjectRepository,
+} from '@stridetime/db';
 import { Task, TaskDifficulty, TaskStatus } from '@stridetime/types';
 
 /**
  * Parameters for creating a new task
  */
-export interface CreateTaskParams {
+export type CreateTaskParams = {
   title: string;
   projectId: string;
   userId: string;
@@ -22,12 +22,12 @@ export interface CreateTaskParams {
   taskTypeId?: string | null;
   description?: string | null;
   plannedForDate?: string | null;
-}
+};
 
 /**
  * Parameters for updating a task
  */
-export interface UpdateTaskParams {
+export type UpdateTaskParams = {
   title?: string;
   description?: string | null;
   progress?: number;
@@ -37,7 +37,7 @@ export interface UpdateTaskParams {
   plannedForDate?: string | null;
   dueDate?: string | null;
   taskTypeId?: string | null;
-}
+};
 
 /**
  * Validation errors
@@ -56,6 +56,11 @@ export class TaskValidationError extends Error {
  * Task Service for business logic
  */
 export class TaskService {
+  constructor(
+    private taskRepo: TaskRepository = defaultTaskRepo,
+    private projectRepo: ProjectRepository = defaultProjectRepo
+  ) {}
+
   /**
    * Validate task creation parameters
    */
@@ -88,10 +93,7 @@ export class TaskService {
       params.maxMinutes !== undefined &&
       params.estimatedMinutes > params.maxMinutes
     ) {
-      throw new TaskValidationError(
-        'estimatedMinutes',
-        'Estimated time cannot exceed max time'
-      );
+      throw new TaskValidationError('estimatedMinutes', 'Estimated time cannot exceed max time');
     }
 
     // Due date validation (if provided as ISO string)
@@ -127,7 +129,11 @@ export class TaskService {
       }
     }
 
-    if (params.description !== undefined && params.description && params.description.length > 5000) {
+    if (
+      params.description !== undefined &&
+      params.description &&
+      params.description.length > 5000
+    ) {
       throw new TaskValidationError('description', 'Description must be under 5000 characters');
     }
   }
@@ -140,21 +146,21 @@ export class TaskService {
     this.validateCreateTask(params);
 
     // Verify project exists
-    const project = await projectRepo.findById(db, params.projectId);
+    const project = await this.projectRepo.findById(db, params.projectId);
     if (!project) {
       throw new TaskValidationError('projectId', 'Project not found');
     }
 
     // Verify parent task exists if provided
     if (params.parentTaskId) {
-      const parentTask = await taskRepo.findById(db, params.parentTaskId);
+      const parentTask = await this.taskRepo.findById(db, params.parentTaskId);
       if (!parentTask) {
         throw new TaskValidationError('parentTaskId', 'Parent task not found');
       }
     }
 
     // Create task
-    const task = await taskRepo.create(db, {
+    const task = await this.taskRepo.create(db, {
       userId: params.userId,
       projectId: params.projectId,
       parentTaskId: params.parentTaskId || null,
@@ -183,7 +189,7 @@ export class TaskService {
     this.validateUpdateTask(params);
 
     // Check if task exists
-    const existingTask = await taskRepo.findById(db, taskId);
+    const existingTask = await this.taskRepo.findById(db, taskId);
     if (!existingTask) {
       throw new TaskValidationError('taskId', 'Task not found');
     }
@@ -241,7 +247,7 @@ export class TaskService {
     }
 
     // Update task
-    const updatedTask = await taskRepo.update(db, taskId, updates);
+    const updatedTask = await this.taskRepo.update(db, taskId, updates);
 
     // If this is a sub-task, update parent progress
     if (updatedTask.parentTaskId) {
@@ -263,7 +269,7 @@ export class TaskService {
    */
   async updateParentProgress(db: StrideDatabase, parentTaskId: string): Promise<void> {
     // Get all sub-tasks
-    const subTasks = await taskRepo.findByParentId(db, parentTaskId);
+    const subTasks = await this.taskRepo.findByParentId(db, parentTaskId);
 
     if (subTasks.length === 0) {
       return;
@@ -281,12 +287,12 @@ export class TaskService {
    * Delete a task (soft delete)
    */
   async delete(db: StrideDatabase, taskId: string): Promise<void> {
-    const task = await taskRepo.findById(db, taskId);
+    const task = await this.taskRepo.findById(db, taskId);
     if (!task) {
       throw new TaskValidationError('taskId', 'Task not found');
     }
 
-    await taskRepo.delete(db, taskId);
+    await this.taskRepo.delete(db, taskId);
 
     // Update parent progress if this was a sub-task
     if (task.parentTaskId) {
@@ -298,49 +304,49 @@ export class TaskService {
    * Get task by ID
    */
   async findById(db: StrideDatabase, taskId: string): Promise<Task | null> {
-    return taskRepo.findById(db, taskId);
+    return this.taskRepo.findById(db, taskId);
   }
 
   /**
    * Get all tasks for a project
    */
   async findByProject(db: StrideDatabase, projectId: string): Promise<Task[]> {
-    return taskRepo.findByProjectId(db, projectId);
+    return this.taskRepo.findByProjectId(db, projectId);
   }
 
   /**
    * Get all tasks for a user
    */
   async findByUser(db: StrideDatabase, userId: string): Promise<Task[]> {
-    return taskRepo.findByUserId(db, userId);
+    return this.taskRepo.findByUserId(db, userId);
   }
 
   /**
    * Get tasks planned for a specific date
    */
   async findByPlannedDate(db: StrideDatabase, userId: string, date: string): Promise<Task[]> {
-    return taskRepo.findByPlannedDate(db, userId, date);
+    return this.taskRepo.findByPlannedDate(db, userId, date);
   }
 
   /**
    * Get tasks by status
    */
   async findByStatus(db: StrideDatabase, userId: string, status: TaskStatus): Promise<Task[]> {
-    return taskRepo.findByStatus(db, userId, status);
+    return this.taskRepo.findByStatus(db, userId, status);
   }
 
   /**
    * Get completed tasks
    */
   async findCompleted(db: StrideDatabase, userId: string): Promise<Task[]> {
-    return taskRepo.findCompleted(db, userId);
+    return this.taskRepo.findCompleted(db, userId);
   }
 
   /**
    * Get sub-tasks for a parent task
    */
   async findSubTasks(db: StrideDatabase, parentTaskId: string): Promise<Task[]> {
-    return taskRepo.findByParentId(db, parentTaskId);
+    return this.taskRepo.findByParentId(db, parentTaskId);
   }
 }
 

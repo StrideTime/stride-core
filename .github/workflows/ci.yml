@@ -40,7 +40,7 @@ jobs:
         run: yarn typecheck
 
       - name: Run tests
-        run: yarn test
+        run: yarn test:ci
 
       - name: Build package
         run: yarn build

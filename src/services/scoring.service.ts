@@ -4,8 +4,12 @@
  * Based on BUSINESS_LOGIC.md specifications
  */
 
-import type { StrideDatabase } from '@stridetime/db';
-import { taskRepo, timeEntryRepo, dailySummaryRepo } from '@stridetime/db';
+import type { StrideDatabase, TaskRepository, TimeEntryRepository, DailySummaryRepository } from '@stridetime/db';
+import {
+  taskRepo as defaultTaskRepo,
+  timeEntryRepo as defaultTimeEntryRepo,
+  dailySummaryRepo as defaultDailySummaryRepo
+} from '@stridetime/db';
 import type { Task, TaskDifficulty } from '@stridetime/types';
 
 /**
@@ -22,7 +26,7 @@ export const DIFFICULTY_MULTIPLIERS: Record<TaskDifficulty, number> = {
 /**
  * Task score breakdown
  */
-export interface TaskScore {
+export type TaskScore = {
   basePoints: number;
   efficiencyBonus: number;
   focusBonus: number;
@@ -32,7 +36,7 @@ export interface TaskScore {
 /**
  * Context for calculating task score
  */
-export interface ScoringContext {
+export type ScoringContext = {
   /**
    * Number of different task types worked on today
    */
@@ -43,6 +47,12 @@ export interface ScoringContext {
  * Scoring Service for business logic
  */
 export class ScoringService {
+  constructor(
+    private taskRepo: TaskRepository = defaultTaskRepo,
+    private timeEntryRepo: TimeEntryRepository = defaultTimeEntryRepo,
+    private dailySummaryRepo: DailySummaryRepository = defaultDailySummaryRepo
+  ) {}
+
   /**
    * Calculate productivity points for a task
    *
@@ -150,13 +160,13 @@ export class ScoringService {
     // Get time entries for today
     const startOfDay = `${date}T00:00:00.000Z`;
     const endOfDay = `${date}T23:59:59.999Z`;
-    const entries = await timeEntryRepo.findByDateRange(db, userId, startOfDay, endOfDay);
+    const entries = await this.timeEntryRepo.findByDateRange(db, userId, startOfDay, endOfDay);
 
     // Get unique task IDs
     const taskIds = [...new Set(entries.map((e) => e.taskId))];
 
     // Get tasks and their types
-    const tasks = await Promise.all(taskIds.map((id) => taskRepo.findById(db, id)));
+    const tasks = await Promise.all(taskIds.map((id) => this.taskRepo.findById(db, id)));
     const taskTypeIds = tasks
       .filter((t): t is Task => t !== null && t.taskTypeId !== null)
       .map((t) => t.taskTypeId);
@@ -182,11 +192,11 @@ export class ScoringService {
     // Get time entries for the day
     const startOfDay = `${date}T00:00:00.000Z`;
     const endOfDay = `${date}T23:59:59.999Z`;
-    const entries = await timeEntryRepo.findByDateRange(db, userId, startOfDay, endOfDay);
+    const entries = await this.timeEntryRepo.findByDateRange(db, userId, startOfDay, endOfDay);
 
     // Get unique tasks worked on
     const taskIds = [...new Set(entries.map((e) => e.taskId))];
-    const tasks = (await Promise.all(taskIds.map((id) => taskRepo.findById(db, id)))).filter(
+    const tasks = (await Promise.all(taskIds.map((id) => this.taskRepo.findById(db, id)))).filter(
       (t): t is Task => t !== null
     );
 
@@ -238,7 +248,7 @@ export class ScoringService {
   ): Promise<void> {
     const summary = await this.calculateDailySummary(db, userId, date);
 
-    await dailySummaryRepo.upsert(db, {
+    await this.dailySummaryRepo.upsert(db, {
       userId,
       date,
       tasksCompleted: summary.tasksCompleted,
@@ -254,7 +264,7 @@ export class ScoringService {
    * Get user's 30-day average score
    */
   async getAverageScore(db: StrideDatabase, userId: string, days: number = 30): Promise<number> {
-    return dailySummaryRepo.calculateAveragePoints(db, userId, days);
+    return this.dailySummaryRepo.calculateAveragePoints(db, userId, days);
   }
 }
 

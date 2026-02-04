@@ -6,6 +6,9 @@
 // Services (new repository-based pattern) - PRIMARY API
 export * from './services';
 
+// Auth
+export { AuthService } from './auth/AuthService';
+
 // Validation utilities
 export * from './validation';
 
@@ -23,4 +26,7 @@ export type {
   User,
   TaskType,
   DailySummary,
+  SignInCredentials,
+  AuthSession,
+  AuthProvider,
 } from '@stridetime/types';
