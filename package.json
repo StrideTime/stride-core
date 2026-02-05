@@ -1,6 +1,6 @@
 {
   "name": "@stridetime/core",
-  "version": "0.1.6",
+  "version": "0.1.8",
   "description": "Business logic for Stride - task management, scoring, and productivity calculations",
   "main": "dist/index.umd.js",
   "module": "dist/index.es.js",
