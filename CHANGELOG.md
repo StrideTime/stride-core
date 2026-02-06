@@ -1,5 +1,13 @@
 # @stridetime/core
 
+## 0.1.16
+
+### Patch Changes
+
+- export sync functions
+- Updated dependencies
+  - @stridetime/core@0.1.16
+
 ## 0.1.14
 
 ### Patch Changes
