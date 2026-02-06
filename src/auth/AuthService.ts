@@ -2,7 +2,12 @@
  * Authentication service that handles user sync and auth operations
  */
 
-import type { AuthProvider, AuthSession } from '@stridetime/types';
+import type {
+  AuthProvider,
+  AuthSession,
+  AuthEventType,
+  OAuthProvider,
+} from '@stridetime/types';
 import { userRepo } from '@stridetime/db';
 import { getDatabase } from '@stridetime/db';
 
@@ -31,8 +36,49 @@ export class AuthService {
     return session;
   }
 
-  onAuthChange(callback: (session: AuthSession | null) => void): () => void {
+  async signUp(
+    email: string,
+    password: string,
+    metadata?: { firstName?: string; lastName?: string }
+  ): Promise<AuthSession> {
+    const session = await this.provider.signUp({ email, password }, metadata);
+    await this.ensureUserExists(session.user);
+    return session;
+  }
+
+  async signInWithOAuth(provider: OAuthProvider): Promise<void> {
+    // OAuth redirects to provider, user will be created on callback via onAuthChange
+    await this.provider.signInWithOAuth(provider);
+  }
+
+  onAuthChange(
+    callback: (session: AuthSession | null, event: AuthEventType) => void,
+  ): () => void {
     return this.provider.onAuthChange(callback);
+  }
+
+  async resetPassword(
+    email: string,
+    options?: { redirectTo?: string },
+  ): Promise<void> {
+    const { error } = await this.provider.resetPasswordForEmail(email, options);
+    if (error) {
+      throw new Error('Failed to send reset email');
+    }
+  }
+
+  async updatePassword(newPassword: string): Promise<void> {
+    console.log('AuthService.updatePassword called with:', newPassword.length, 'characters');
+    const { error } = await this.provider.updateUser({
+      password: newPassword,
+    });
+
+    console.log('Provider updateUser result:', { error });
+
+    if (error) {
+      console.error('Password update failed:', error);
+      throw new Error(`Failed to update password: ${error.message || 'Unknown error'}`);
+    }
   }
 
   private async ensureUserExists(authUser: any): Promise<void> {

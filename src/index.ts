@@ -8,6 +8,7 @@ export * from './services';
 
 // Auth
 export { AuthService } from './auth/AuthService';
+export { createAuthService } from './auth/createAuthService';
 
 // Validation utilities
 export * from './validation';
@@ -15,18 +16,26 @@ export * from './validation';
 // Planning utilities
 export * from './planning';
 
-// Re-export types from @stridetime/types for convenience
-export type {
-  Task,
-  Project,
-  Workspace,
-  TimeEntry,
-  TaskDifficulty,
-  TaskStatus,
-  User,
-  TaskType,
-  DailySummary,
-  SignInCredentials,
-  AuthSession,
-  AuthProvider,
-} from '@stridetime/types';
+// Database functions (re-exported from @stridetime/db)
+export {
+  initDatabase,
+  getDatabase,
+  closeDatabase,
+  isDatabaseInitialized,
+  type StrideDatabase,
+  type DatabaseConfig,
+  type LocalDatabaseConfig,
+  type SyncDatabaseConfig,
+} from '@stridetime/db';
+
+// Repositories (re-exported from @stridetime/db for client use)
+// Note: Services should be preferred when available
+export {
+  projectRepo,
+  workspaceRepo,
+  type ProjectRepository,
+  type WorkspaceRepository,
+} from '@stridetime/db';
+
+// Re-export enums from @stridetime/types
+
