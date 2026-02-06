@@ -22,10 +22,17 @@ export {
   getDatabase,
   closeDatabase,
   isDatabaseInitialized,
+  connectSync,
+  disconnectSync,
+  isSyncEnabled,
+  getSyncStatus,
+  onSyncStatusChange,
   type StrideDatabase,
   type DatabaseConfig,
   type LocalDatabaseConfig,
   type SyncDatabaseConfig,
+  type SyncStatus,
+  type SyncState,
 } from '@stridetime/db';
 
 // Repositories (re-exported from @stridetime/db for client use)
