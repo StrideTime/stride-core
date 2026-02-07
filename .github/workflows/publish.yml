@@ -39,7 +39,7 @@ jobs:
         run: yarn build
 
       - name: Run tests
-        run: yarn test:ci
+        run: yarn test
 
       # Stable release from main branch
       - name: Create Release PR or Publish (main)
