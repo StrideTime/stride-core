@@ -86,13 +86,15 @@ export class AuthService {
     const existingUser = await userRepo.findByEmail(db, authUser.email);
 
     if (!existingUser) {
+      // Use the Supabase auth UID as the local user record's id.
+      // This is critical for RLS policies which check auth.uid()::text = id.
       await userRepo.create(db, {
         email: authUser.email,
         firstName: authUser.firstName,
         lastName: authUser.lastName,
         avatarUrl: authUser.avatarUrl,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      });
+      }, authUser.id);
     }
   }
 }

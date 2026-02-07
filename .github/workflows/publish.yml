@@ -1,0 +1,76 @@
+name: Publish
+
+on:
+  push:
+    branches: [main, beta, alpha]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          registry-url: 'https://npm.pkg.github.com'
+          cache: 'yarn'
+
+      - name: Configure npm registry
+        run: |
+          echo "@stridetime:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build package
+        run: yarn build
+
+      - name: Run tests
+        run: yarn test:ci
+
+      # Stable release from main branch
+      - name: Create Release PR or Publish (main)
+        if: github.ref == 'refs/heads/main'
+        uses: changesets/action@v1
+        with:
+          publish: yarn release
+          title: 'chore: version packages'
+          commit: 'chore: version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Pre-release from beta branch
+      - name: Publish beta pre-release
+        if: github.ref == 'refs/heads/beta'
+        run: |
+          yarn changeset version --snapshot beta
+          yarn build
+          yarn changeset publish --tag beta
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Pre-release from alpha branch
+      - name: Publish alpha pre-release
+        if: github.ref == 'refs/heads/alpha'
+        run: |
+          yarn changeset version --snapshot alpha
+          yarn build
+          yarn changeset publish --tag alpha
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

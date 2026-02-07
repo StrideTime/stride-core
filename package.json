@@ -29,7 +29,6 @@
     "release": "yarn build && changeset publish"
   },
   "dependencies": {
-    "@stridetime/core": "^0.1.16",
     "@stridetime/db": "^0.1.12",
     "@stridetime/types": "^0.1.21"
   },
